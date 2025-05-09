@@ -4,27 +4,32 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define PI 3.14159265358979323846
 
 typedef struct {
-    float *data;
-    int dims[2];
-} Matrix;
+    int size;
+    int input_size;
 
-typedef struct {
-    Matrix weights;
-    Matrix biases;
-    const char *activation;
-    Matrix inputs;
-    Matrix z;
-    Matrix outputs;
+    float *weights;
+    float *biases;
 
-    Matrix weight_momentums;
-    Matrix bias_momentums;
+    float *inputs;
+    float *outputs;
 
-    Matrix weight_cache;
-    Matrix bias_cache;
+    char *activation;
+    float *activation_outputs;
+
+    float *dX;
+    float *dW;
+    float *dB;
+
+    float *weight_momentums;
+    float *bias_momentums;
+
+    float *weight_cache;
+    float *bias_cache;
 
     float weight_regularizer_l1;
     float weight_regularizer_l2;
@@ -44,57 +49,67 @@ typedef struct {
     int iterations;
 } Config;
 
-Matrix init_matrix(float *data, int rows, int columns) {
-    Matrix m;
-    m.data = data;
-    m.dims[0] = rows;
-    m.dims[1] = columns;
-
-    return m;
+float rand_uniform() {
+    return 2.0f * ((float) rand() / RAND_MAX) - 1.0f;
 }
 
-float random_weight() {
-    float u1 = (rand() + 1.0) / (RAND_MAX + 2.0);
-    float u2 = (rand() + 1.0) / (RAND_MAX + 2.0);
-    return sqrt(-2.0 * log(u1)) * cos(2.0 * PI * u2);
-}
-
-Layer init_layer(int input_size, int size, const char *activation,
+Layer *init_layer(int n_inputs, int size, char *activation,
         float weight_regularizer_l1,
         float weight_regularizer_l2,
         float bias_regularizer_l1,
-        float bias_regularizer_l2) {
-    Layer layer;
+        float bias_regularizer_l2,
+        int batch_size) {
+    Layer *layer = (Layer *) malloc(sizeof(Layer));
 
-    float *weights = (float *) malloc(input_size * size * sizeof(float));
-    for (int i = 0; i < input_size * size; i++) {
-        weights[i] = random_weight();
-    }
+    layer -> size = size;
+    layer -> input_size = n_inputs;
 
-    layer.weight_regularizer_l1 = weight_regularizer_l1;
-    layer.weight_regularizer_l2 = weight_regularizer_l2;
-    layer.bias_regularizer_l1 = bias_regularizer_l1;
-    layer.bias_regularizer_l2 = bias_regularizer_l2;
+    float limit = sqrtf(6.0f / (n_inputs + size));
 
-    float *biases = (float *) calloc(size, sizeof(float));
+    int weight_size = n_inputs * size;
+    int bias_size = size;
+    int output_size = batch_size * size;
+    int input_size = batch_size * n_inputs;
 
-    float *weight_mom = (float *) calloc(input_size * size, sizeof(float));
-    float *weight_cac = (float *) calloc(input_size * size, sizeof(float));
+    layer -> inputs = (float *) malloc(input_size * sizeof(float));
+    layer -> dX = (float *) malloc(input_size * sizeof(float));
 
-    float *bias_mom = (float *) calloc(size, sizeof(float));
-    float *bias_cac = (float *) calloc(size, sizeof(float));
+    layer -> weights = (float *) malloc(weight_size * sizeof(float));
+    for (int i = 0; i < weight_size; i++) layer -> weights[i] = 0.1 * rand_uniform() * limit;
+    layer -> weight_regularizer_l1 = weight_regularizer_l1;
+    layer -> weight_regularizer_l2 = weight_regularizer_l2;
+    layer -> weight_momentums = (float *) calloc(weight_size, sizeof(float));
+    layer -> weight_cache = (float *) calloc(weight_size, sizeof(float));
+    layer -> dW = (float *) malloc(weight_size * sizeof(float));
 
-    layer.weights = init_matrix(weights, input_size, size);
-    layer.weight_momentums = init_matrix(weight_mom, input_size, size);
-    layer.weight_cache = init_matrix(weight_cac, input_size, size);
+    layer -> biases = (float *) calloc(size, sizeof(float));
+    layer -> bias_regularizer_l1 = bias_regularizer_l1;
+    layer -> bias_regularizer_l2 = bias_regularizer_l2;
+    layer -> bias_momentums = (float *) calloc(size, sizeof(float));
+    layer -> bias_cache = (float *) calloc(size, sizeof(float));
+    layer -> dB = (float *) malloc(bias_size * sizeof(float));
 
-    layer.biases = init_matrix(biases, size, 1);
-    layer.bias_momentums = init_matrix(bias_mom, size, 1);
-    layer.bias_cache = init_matrix(bias_cac, size, 1);
+    layer -> outputs = (float *) malloc(output_size * sizeof(float));
 
-    layer.activation = activation;
+    layer -> activation = activation;
+    layer -> activation_outputs = (float *) malloc(output_size * sizeof(float));
 
     return layer;
+}
+
+void free_layer(Layer *layer) {
+    free(layer -> inputs);
+    free(layer -> dX);
+    free(layer -> weights);
+    free(layer -> weight_momentums);
+    free(layer -> weight_cache);
+    free(layer -> dW);
+    free(layer -> biases);
+    free(layer -> bias_momentums);
+    free(layer -> bias_cache);
+    free(layer -> dB);
+    free(layer -> outputs);
+    free(layer);
 }
 
 #endif

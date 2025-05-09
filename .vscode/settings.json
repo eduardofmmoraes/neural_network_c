@@ -1,0 +1,30 @@
+{
+    "files.associations": {
+        "optimizer.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "train.h": "c",
+        "activation_functions.h": "c",
+        "structs.h": "c",
+        "deque": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "initializer_list": "c",
+        "utility": "cpp",
+        "algorithm": "c",
+        "functional": "c",
+        "iterator": "c",
+        "memory_resource": "c",
+        "tuple": "c",
+        "iosfwd": "c",
+        "memory": "c",
+        "numeric": "c",
+        "streambuf": "c",
+        "cmath": "c",
+        "metrics.h": "c",
+        "stdio.h": "c",
+        "gsl_randist.h": "c",
+        "utils.h": "c"
+    }
+}

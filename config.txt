@@ -1,10 +1,8 @@
-dataset="cement_strength"
-train_size=875
-test_size=155
-columns=9
-batch_size=128
-epochs=100
-learning_rate=1e-2
+train_size=1000
+test_size=1000
+columns=2
+epochs=1000
+learning_rate=5e-3
 decay_rate=1e-3
 epsilon=1e-7
 beta_1=0.9
